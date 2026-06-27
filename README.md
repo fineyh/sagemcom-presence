@@ -68,25 +68,57 @@ npm run dev
 
 Deploy to Vercel and set the same env vars in the project settings.
 
-### 4. Run the collector 24/7 (Windows)
+### 4. Run the collector (Windows)
 
 The dashboard only updates while the collector is running somewhere on the LAN.
-On an always-on PC:
+First get the deps and `.env` in place:
 
 ```powershell
 cd agent
 pip install -r requirements.txt
 copy .env.example .env     # fill ROUTER_PASSWORD + the two SUPABASE_* values
-python collector.py        # test it runs, Ctrl-C, then install autostart:
+python collector.py        # test it runs, then Ctrl-C
+```
 
-# install as a boot task (run PowerShell as Administrator):
+Then pick one of two ways to keep it running. **Don't run both** — you'd get two
+collectors polling at once.
+
+#### Option A — tray app (recommended for a personal/daily-use PC)
+
+A system-tray controller with an obvious on/off switch, so a background poller
+can never get "stuck on" on a machine you use every day:
+
+```powershell
+pythonw tray.py            # or just double-click start-tray.vbs
+```
+
+A tray icon appears (green = running, grey = stopped) and the collector starts
+polling immediately. **Right-click** the icon for:
+
+- **Start / Stop collector** — toggle without quitting the tray
+- **Start on login** — checkbox; adds/removes a per-user registry "Run" entry
+  (no admin required) so the tray (and collector) come back after a reboot
+- **Open log** — opens `agent\collector.log`
+- **Quit** — stops the collector and exits
+
+The collector runs as a child process tied to a Windows *job object* with
+KILL_ON_JOB_CLOSE: if the tray exits for **any** reason — Quit, logout, or even
+Task Manager ending it — Windows kills the collector too. You can never end up
+with an orphaned, invisible poller you can't stop.
+
+#### Option B — boot service (for a dedicated, headless always-on box)
+
+Runs at boot as SYSTEM with no one logged in, and restarts on crash:
+
+```powershell
+# run PowerShell as Administrator:
 powershell -ExecutionPolicy Bypass -File install-windows-autostart.ps1
 ```
 
-The task runs at boot as SYSTEM, restarts on crash, and logs to
-`agent\collector.log`. Manage it via the `SagemcomPresenceCollector` scheduled
-task (`Stop-ScheduledTask` / `Disable-ScheduledTask`, or
-`install-windows-autostart.ps1 -Uninstall`).
+The task logs to `agent\collector.log`. Manage it via the
+`SagemcomPresenceCollector` scheduled task (`Stop-ScheduledTask` /
+`Disable-ScheduledTask`, or `install-windows-autostart.ps1 -Uninstall`). If you
+later switch to the tray app, uninstall this task first.
 
 ## Security model
 

@@ -2,3 +2,6 @@ sagemcom_api>=1.4.3
 python-dotenv>=1.0.0
 # Added in Phase 3 (collector): talks to Supabase over its REST API.
 httpx>=0.27.0
+# Added for the Windows tray controller (tray.py): tray icon + menu.
+pystray>=0.19.5
+Pillow>=10.0.0

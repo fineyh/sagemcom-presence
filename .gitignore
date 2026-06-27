@@ -19,6 +19,10 @@ __pycache__/
 .venv/
 venv/
 
+# Collector runtime artifacts (generated on the always-on PC)
+collector.log
+run-collector.bat
+
 # Node / Next.js
 node_modules/
 .next/
